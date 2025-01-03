@@ -58,14 +58,32 @@ class AwsUtils:
         except Exception as e:
             return abort(400, str(e))
 
-    def delete_s3_bucket(self):
+    def delete_s3_bucket(self, bucket_name):
 
         s3 = boto3.client('s3')
 
+        try:
+            s3.head_bucket(
+                Bucket=bucket_name,
+            )
+        except Exception as e:
+            abort(400, str(e))
+        
+        paginator = s3.get_paginator('list_objects_v2')
+
+        pages = paginator.paginate(Bucket=bucket_name)
+
+        objects_in_bucket = []
+
+        for page in pages:
+            if 'Contents' in page:
+                objects_in_bucket = [{'Key': obj['Key']} for obj in page['Contents']]
+                s3.delete_objects(Bucket=bucket_name, Delete={'Objects': objects_in_bucket})
+        
         s3.delete_bucket(
-            Bucket=self.bucket_name,
-            ExpectedBucketOwner='string'
+            Bucket=bucket_name,
         )
+
         return 'bucket deleted successfully'
     
 

@@ -11,13 +11,18 @@ def home():
     1.  POST /create-bucket
         Description: create an S3 bucket to store all movie posters
         Payload : {
-            "bucket_name" : "string" (OPTIONAL) (DEFAULT - serverless-movies-api-cover-images-<randomly generated number>),
-            "location" : "string" (OPTIONAL) (DEFAULT - us-east-1)
+            "bucket_name" : "string" (OPTIONAL) (DEFAULT - serverless-movies-api-cover-images-<randomly generated number>)
         }
+
+    2. POST /delete-bucket
+       Description: create an S3 bucket to store all movie posters
+       Payload : {
+            "bucket_name" : "string" (REQUIRED)
+       }
     """
 
 @app.route('/create-bucket', methods=['POST'])
-def submit():
+def create_bucket():
     data = request.json
 
     try:
@@ -29,7 +34,20 @@ def submit():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    
+
+@app.route('/delete-bucket', methods=['POST'])
+def delete_bucket():
+    data = request.json
+
+    try:
+        AwsUtils.build().delete_s3_bucket(data['bucket_name'])
+        return jsonify(
+            {
+                "status": "Bucket deleted successfully"
+            }
+        ), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 if __name__ == "__main__":
     app.run(debug=True)
