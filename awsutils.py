@@ -57,6 +57,18 @@ class AwsUtils:
             return bucket_name
         except Exception as e:
             return abort(400, str(e))
+        
+    def __put_s3(self, bucket_name, file_path, file_name):
+        s3 = boto3.client('s3')
+        print('here')
+        s3.put_object(
+            Body=open(file_path, 'rb'),
+            Bucket=bucket_name,
+            Key=file_name,
+            ContentType="image/jpeg"
+        )
+        return f"https://{bucket_name}.s3.us-east-1.amazonaws.com/{file_name}"
+
 
     def delete_s3_bucket(self, bucket_name):
 
@@ -125,6 +137,36 @@ class AwsUtils:
             return db_name
         except Exception as e:
             abort(400, str(e))
+
+    def insert_items_db(self, db_name, bucket_name, items):
+        db = boto3.client('dynamodb')
+
+        for item in items:
+            item['coverUrl'] = self.__put_s3(bucket_name, item['coverUrl'], item['title'])
+
+        transformed_items = []
+        for item in items:
+            transformed_items.append({
+                'PutRequest': {
+                    'Item': {
+                        'title': {'S': item['title']},
+                        'releaseYear': {'S': item['releaseYear']},
+                        'genre': {'S': item['genre']},
+                        'coverUrl': {'S': item['coverUrl']}
+                    }
+                }
+            })
+
+
+        try:
+            db.batch_write_item(
+                RequestItems={
+                    db_name: transformed_items
+                }
+            )
+        except Exception as e:
+            abort(400, str(e))
+
     
     def delete_db(self):
 
@@ -136,3 +178,4 @@ class AwsUtils:
             )
         except Exception as e:
             abort(400, str(e))
+    

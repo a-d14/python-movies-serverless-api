@@ -87,5 +87,29 @@ def delete_db():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route('/insert-items', methods=['POST'])
+def insert_items_db():
+    data = request.json
+
+    db_name = request.args.get('tableName', default='serverless-movies-api-db')
+    
+    bucket_name = request.args.get('bucketName')
+
+    print(bucket_name)
+
+    if bucket_name is None or bucket_name == '':
+        return jsonify({"error": "bucket name must be provided"}), 400
+
+
+    try:
+        AwsUtils.build().insert_items_db(db_name, bucket_name, data)
+        return jsonify(
+            {
+                "status": "Items inserted succesfully"
+            }
+        ), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 if __name__ == "__main__":
     app.run(debug=True)
