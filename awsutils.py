@@ -86,4 +86,53 @@ class AwsUtils:
 
         return 'bucket deleted successfully'
     
+    def create_db(self, db_name=None):
 
+        db = boto3.client('dynamodb')
+
+        if db_name is None or db_name == '':
+            db_name = "serverless-movies-api-db"
+
+        try:
+            db.create_table(
+                AttributeDefinitions=[
+                    {
+                        'AttributeName': 'title',
+                        'AttributeType': 'S'
+                    },
+                    {
+                        'AttributeName': 'releaseYear',
+                        'AttributeType': 'S'
+                    }
+                ],
+                TableName=db_name,
+                KeySchema=[
+                    {
+                        'AttributeName': 'title',
+                        'KeyType': 'HASH'
+                    },
+                    {
+                        'AttributeName': 'releaseYear',
+                        'KeyType': 'RANGE'
+                    }
+                ],
+                BillingMode='PROVISIONED',
+                ProvisionedThroughput={
+                    'ReadCapacityUnits': 1,
+                    'WriteCapacityUnits': 1
+                },
+            )
+            return db_name
+        except Exception as e:
+            abort(400, str(e))
+    
+    def delete_db(self):
+
+        db = boto3.client('dynamodb')
+
+        try:
+            db.delete_table(
+                TableName=db_name
+            )
+        except Exception as e:
+            abort(400, str(e))

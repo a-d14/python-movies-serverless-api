@@ -19,6 +19,18 @@ def home():
        Payload : {
             "bucket_name" : "string" (REQUIRED)
        }
+
+    3. POST /create-db
+       Description: create a DynamoDB table to store movies data.
+       Payload : {
+            "bucket_name" : "string" (OPTIONAL) (DEFAULT - serverless-movies-api-db)
+       }
+       
+    4. POST /delete-db
+       Description: delete a DynamoDB table.
+       Payload : {
+            "bucket_name" : "string" (REQUIRED)
+       }
     """
 
 @app.route('/create-bucket', methods=['POST'])
@@ -44,6 +56,32 @@ def delete_bucket():
         return jsonify(
             {
                 "status": "Bucket deleted successfully"
+            }
+        ), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route('/create-db', methods=['POST'])
+def create_db():
+    data = request.json
+    try:
+        return jsonify(
+            {
+                "status": AwsUtils.build().create_db(data['db_name'])
+            }
+        ), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    
+@app.route('/delete-db', methods=['POST'])
+def delete_db():
+    data = request.json
+
+    try:
+        AwsUtils.build().delete_db(data['db_name'])
+        return jsonify(
+            {
+                "status": "DB deleted successfully"
             }
         ), 200
     except Exception as e:
