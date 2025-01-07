@@ -1,15 +1,15 @@
 import boto3
 
-def get_movies(table_name):
+def get_movies(event, context):
     dynamodb = boto3.client('dynamodb')
     try:
         all_movies = []
-        response = dynamodb.scan(TableName=table_name)
+        response = dynamodb.scan(TableName=event.get("table_name"))
         all_movies.extend(response.get('Items', []))
         
         while 'LastEvaluatedKey' in response:
             response = dynamodb.scan(
-                TableName=table_name,
+                TableName=event.get("table_name"),
                 ExclusiveStartKey=response['LastEvaluatedKey']
             )
             all_movies.extend(response.get('Items', []))

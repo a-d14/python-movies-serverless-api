@@ -111,9 +111,8 @@ def insert_items_db():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
     
-@app.route('/create-policy', methods=['POST'])
-def create_policy():
-
+@app.route('/create-role', methods=['POST'])
+def create_role():
     data = request.json
     policy_document = {
         "Version": "2012-10-17",
@@ -130,7 +129,21 @@ def create_policy():
     }
 
     try:
-        response = AwsUtils.build().create_policy(data['policy-name'], policy_document)
+        response = AwsUtils.build().create_role(data['role-name'], policy_document)
+
+        return jsonify(
+                {
+                    "arn": f"{response}"
+                }
+            ), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400    
+
+@app.route('/create-lambda', methods=['POST'])
+def create_lambda():
+    data = request.json
+    try:
+        response = AwsUtils.build().create_lambda(data['name'], data['file-path'], data['role-arn'])
 
         return jsonify(
                 {

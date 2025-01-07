@@ -181,13 +181,54 @@ class AwsUtils:
         except Exception as e:
             abort(400, str(e))
 
-    def create_policy(self, policy_name, policy_document):
+    def create_role(self, role_name, policy_document):
         iam = boto3.client('iam')
         try:
-            response = iam.create_policy(
-                PolicyName=policy_name,
+            policy_response = iam.create_policy(
+                PolicyName='DynamoReadAccess',
                 PolicyDocument=json.dumps(policy_document)
             )
-            return response['Policy']['Arn']
+
+            role_response = iam.create_role(
+                RoleName=role_name,
+                AssumeRolePolicyDocument=json.dumps({
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {"Service": "lambda.amazonaws.com"},
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                    }
+                )
+            )
+
+            iam.attach_role_policy(
+                RoleName=role_response['Role']['RoleName'],
+                PolicyArn=policy_response['Policy']['Arn']
+            )
+
+            return role_response['Role']['Arn']
+        except Exception as e:
+            abort(400, str(e))
+
+    def create_lambda(self, func_name, func_path, role_arn):
+        lf = boto3.client('lambda')
+
+        with open(func_path, 'rb') as zip_file:
+            zip_content = zip_file.read()
+
+        try:
+            response = lf.create_function(
+                FunctionName=func_name,
+                Runtime='python3.9',
+                Role=role_arn,
+                Code={
+                    'ZipFile': zip_content
+                },
+                Description='a function to retrieve all movies from movies DynamoDB database'
+            )
+            return response['FunctionArn']
         except Exception as e:
             abort(400, str(e))
