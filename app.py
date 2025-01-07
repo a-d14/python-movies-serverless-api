@@ -40,7 +40,7 @@ def create_bucket():
     try:
         return jsonify(
             {
-                "bucket_name": AwsUtils.build().create_s3_bucket(data['bucket_name'])
+                "bucket_name": AwsUtils.build().create_s3_bucket(data['bucket_name']),
             }
         ), 200
     except Exception as e:
@@ -148,6 +148,20 @@ def create_lambda():
         return jsonify(
                 {
                     "arn": f"{response}"
+                }
+            ), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400    
+    
+@app.route('/call-lambda', methods=['POST'])
+def call_lambda():
+    data = request.json
+    try:
+        response = AwsUtils.build().call_lambda(data['lambda-arn'], data['db-name'])
+
+        return jsonify(
+                {
+                    "data": f"{response.read().decode('utf-8')}"
                 }
             ), 200
     except Exception as e:

@@ -223,7 +223,7 @@ class AwsUtils:
             response = lf.create_function(
                 FunctionName=func_name,
                 Runtime='python3.9',
-                Handler='get_movies',
+                Handler='get_movies.get_movies',
                 Role=role_arn,
                 Code={
                     'ZipFile': zip_content
@@ -231,5 +231,18 @@ class AwsUtils:
                 Description='a function to retrieve all movies from movies DynamoDB database'
             )
             return response['FunctionArn']
+        except Exception as e:
+            abort(400, str(e))
+
+    def call_lambda(self, func_arn, table_name):
+        lf = boto3.client('lambda')
+        try:
+            response = lf.invoke(
+                FunctionName=func_arn,
+                Payload=json.dumps({
+                    "table_name" : table_name
+                })
+            )
+            return response['Payload']
         except Exception as e:
             abort(400, str(e))
