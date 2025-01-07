@@ -180,4 +180,14 @@ class AwsUtils:
             )
         except Exception as e:
             abort(400, str(e))
-    
+
+    def create_policy(self, policy_name, policy_document):
+        iam = boto3.client('iam')
+        try:
+            response = iam.create_policy(
+                PolicyName=policy_name,
+                PolicyDocument=json.dumps(policy_document)
+            )
+            return response['Policy']['Arn']
+        except Exception as e:
+            abort(400, str(e))

@@ -110,6 +110,35 @@ def insert_items_db():
         ), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+    
+@app.route('/create-policy', methods=['POST'])
+def create_policy():
+
+    data = request.json
+    policy_document = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "dynamodb:Scan",
+                    "dynamodb:GetItem"
+                ],
+                "Resource": f"{data['arn']}"
+            }
+        ]
+    }
+
+    try:
+        response = AwsUtils.build().create_policy(data['policy-name'], policy_document)
+
+        return jsonify(
+                {
+                    "arn": f"{response}"
+                }
+            ), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400    
 
 if __name__ == "__main__":
     app.run(debug=True)
