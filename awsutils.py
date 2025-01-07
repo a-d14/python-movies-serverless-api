@@ -223,6 +223,7 @@ class AwsUtils:
             response = lf.create_function(
                 FunctionName=func_name,
                 Runtime='python3.9',
+                Handler='get_movies',
                 Role=role_arn,
                 Code={
                     'ZipFile': zip_content
