@@ -106,7 +106,7 @@ class AwsUtils:
             db_name = "serverless-movies-api-db"
 
         try:
-            db.create_table(
+            response = db.create_table(
                 AttributeDefinitions=[
                     {
                         'AttributeName': 'title',
@@ -134,7 +134,9 @@ class AwsUtils:
                     'WriteCapacityUnits': 1
                 },
             )
-            return db_name
+
+            table_arn = response['TableDescription']['TableArn']
+            return table_arn
         except Exception as e:
             abort(400, str(e))
 
@@ -168,7 +170,7 @@ class AwsUtils:
             abort(400, str(e))
 
     
-    def delete_db(self):
+    def delete_db(self, db_name):
 
         db = boto3.client('dynamodb')
 

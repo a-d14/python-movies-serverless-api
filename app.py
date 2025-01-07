@@ -67,7 +67,7 @@ def create_db():
     try:
         return jsonify(
             {
-                "status": AwsUtils.build().create_db(data['db_name'])
+                "arn": AwsUtils.build().create_db(data['db_name'])
             }
         ), 200
     except Exception as e:
