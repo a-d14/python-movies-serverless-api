@@ -33,7 +33,7 @@ def get_movies_by_year(event, context):
         
         while 'LastEvaluatedKey' in response:
             response = dynamodb.scan(
-                TableName=event.get("table_name"),
+                TableName=event.get("db_name"),
                 ExclusiveStartKey=response['LastEvaluatedKey']
             )
             all_movies.extend(change_format(response.get('Items', [])))

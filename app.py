@@ -158,7 +158,7 @@ def create_lambda():
         return jsonify({"error": str(e)}), 400    
     
 @app.route('/getmovies', methods=['GET'])
-def call_lambda():
+def get_movies():
     try:
         response = awsutils.get_movies()
 
@@ -168,7 +168,20 @@ def call_lambda():
             }
         ), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 400    
+        return jsonify({"error": str(e)}), 404
+    
+@app.route('/getmoviesbyyear/<year>', methods=['GET'])
+def get_movies_by_year(year):
+    try:
+        response = awsutils.get_movies_by_year(year)
+
+        return jsonify(
+            {
+                "data": json.loads(response.read().decode('utf-8'))  # Parse JSON string into a Python list/dict
+            }
+        ), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 404
 
 if __name__ == "__main__":
     app.run(debug=True)

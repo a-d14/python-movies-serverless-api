@@ -233,8 +233,6 @@ class AwsUtils:
                 Description='a function to retrieve all movies from movies DynamoDB database'
             )
 
-            self.lambda_name = func_name
-
             return func_name
         except Exception as e:
             abort(400, str(e))
@@ -242,15 +240,27 @@ class AwsUtils:
     def get_movies(self):
         lf = boto3.client('lambda')
         try:
-            print(self.lambda_name if hasattr(self, 'lambda_name') and self.lambda_name else 'get_movies')
-            print(self.db_name if hasattr(self, 'db_name') and self.db_name else 'serverless-movies-api-db')
             response = lf.invoke(
-                FunctionName=self.lambda_name if hasattr(self, 'lambda_name') and self.lambda_name else 'get_movies',
+                FunctionName='get_movies',
                 Payload=json.dumps({
                     "db_name" : self.db_name if hasattr(self, 'db_name') and self.db_name else 'serverless-movies-api-db'
                 })
             )
 
+            return response['Payload']
+        except Exception as e:
+            abort(400, str(e))
+
+    def get_movies_by_year(self, year):
+        lf = boto3.client('lambda')
+        try:
+            response = lf.invoke(
+                FunctionName='get_movies_by_year',
+                Payload=json.dumps({
+                    "db_name" : self.db_name if hasattr(self, 'db_name') and self.db_name else 'serverless-movies-api-db',
+                    "year": year
+                })
+            )
             return response['Payload']
         except Exception as e:
             abort(400, str(e))
