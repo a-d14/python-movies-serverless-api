@@ -102,6 +102,8 @@ class AwsUtils:
 
         db = boto3.client('dynamodb')
 
+        self.db_name = db_name
+
         if db_name is None or db_name == '':
             db_name = "serverless-movies-api-db"
 
@@ -220,29 +222,35 @@ class AwsUtils:
             zip_content = zip_file.read()
 
         try:
-            response = lf.create_function(
+            lf.create_function(
                 FunctionName=func_name,
                 Runtime='python3.9',
-                Handler='get_movies.get_movies',
+                Handler=f'lambdas.{func_name}',
                 Role=role_arn,
                 Code={
                     'ZipFile': zip_content
                 },
                 Description='a function to retrieve all movies from movies DynamoDB database'
             )
-            return response['FunctionArn']
+
+            self.lambda_name = func_name
+
+            return func_name
         except Exception as e:
             abort(400, str(e))
 
-    def call_lambda(self, func_arn, table_name):
+    def get_movies(self):
         lf = boto3.client('lambda')
         try:
+            print(self.lambda_name if hasattr(self, 'lambda_name') and self.lambda_name else 'get_movies')
+            print(self.db_name if hasattr(self, 'db_name') and self.db_name else 'serverless-movies-api-db')
             response = lf.invoke(
-                FunctionName=func_arn,
+                FunctionName=self.lambda_name if hasattr(self, 'lambda_name') and self.lambda_name else 'get_movies',
                 Payload=json.dumps({
-                    "table_name" : table_name
+                    "db_name" : self.db_name if hasattr(self, 'db_name') and self.db_name else 'serverless-movies-api-db'
                 })
             )
+
             return response['Payload']
         except Exception as e:
             abort(400, str(e))

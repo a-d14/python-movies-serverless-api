@@ -1,7 +1,11 @@
+import json
+
 from flask import Flask, request, jsonify
 from awsutils import AwsUtils
 
 app = Flask(__name__)
+
+awsutils = AwsUtils()
 
 @app.route('/')
 def home():
@@ -40,7 +44,7 @@ def create_bucket():
     try:
         return jsonify(
             {
-                "bucket_name": AwsUtils.build().create_s3_bucket(data['bucket_name']),
+                "bucket_name": awsutils.create_s3_bucket(data['bucket_name']),
             }
         ), 200
     except Exception as e:
@@ -52,7 +56,7 @@ def delete_bucket():
     data = request.json
 
     try:
-        AwsUtils.build().delete_s3_bucket(data['bucket_name'])
+        awsutils.delete_s3_bucket(data['bucket_name'])
         return jsonify(
             {
                 "status": "Bucket deleted successfully"
@@ -67,7 +71,7 @@ def create_db():
     try:
         return jsonify(
             {
-                "arn": AwsUtils.build().create_db(data['db_name'])
+                "arn": awsutils.create_db(data['db_name'])
             }
         ), 200
     except Exception as e:
@@ -78,7 +82,7 @@ def delete_db():
     data = request.json
 
     try:
-        AwsUtils.build().delete_db(data['db_name'])
+        awsutils.delete_db(data['db_name'])
         return jsonify(
             {
                 "status": "DB deleted successfully"
@@ -102,7 +106,7 @@ def insert_items_db():
 
 
     try:
-        AwsUtils.build().insert_items_db(db_name, bucket_name, data)
+        awsutils.insert_items_db(db_name, bucket_name, data)
         return jsonify(
             {
                 "status": "Items inserted succesfully"
@@ -129,7 +133,7 @@ def create_role():
     }
 
     try:
-        response = AwsUtils.build().create_role(data['role-name'], policy_document)
+        response = awsutils.create_role(data['role-name'], policy_document)
 
         return jsonify(
                 {
@@ -143,27 +147,26 @@ def create_role():
 def create_lambda():
     data = request.json
     try:
-        response = AwsUtils.build().create_lambda(data['name'], data['file-path'], data['role-arn'])
+        response = awsutils.create_lambda(data['name'], data['file-path'], data['role-arn'])
 
         return jsonify(
                 {
-                    "arn": f"{response}"
+                    "name": f"{response}"
                 }
             ), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400    
     
-@app.route('/call-lambda', methods=['POST'])
+@app.route('/getmovies', methods=['GET'])
 def call_lambda():
-    data = request.json
     try:
-        response = AwsUtils.build().call_lambda(data['lambda-arn'], data['db-name'])
+        response = awsutils.get_movies()
 
         return jsonify(
-                {
-                    "data": f"{response.read().decode('utf-8')}"
-                }
-            ), 200
+            {
+                "data": json.loads(response.read().decode('utf-8'))  # Parse JSON string into a Python list/dict
+            }
+        ), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400    
 
