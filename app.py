@@ -165,7 +165,7 @@ def get_movies():
 
         return jsonify(
             {
-                "data": json.loads(response.read().decode('utf-8'))  # Parse JSON string into a Python list/dict
+                "data": json.loads(response.read().decode('utf-8'))
             }
         ), 200
     except Exception as e:
@@ -178,7 +178,7 @@ def get_movies_by_year(year):
 
         return jsonify(
             {
-                "data": json.loads(response.read().decode('utf-8'))  # Parse JSON string into a Python list/dict
+                "data": json.loads(response.read().decode('utf-8'))
             }
         ), 200
     except Exception as e:
@@ -189,9 +189,11 @@ def generate_movie_summary(title):
     try:
         response = awsutils.generate_movie_summary(title)
 
+        response_payload = json.loads(response.read().decode('utf-8'))
+
         return jsonify(
             {
-                "summary": json.loads(response.read().decode('utf-8'))  # Parse JSON string into a Python list/dict
+                "summary": response_payload
             }
         ), 200
     except Exception as e:

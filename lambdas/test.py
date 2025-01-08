@@ -1,34 +1,29 @@
 import boto3
+import json
 
-def get_movies():
-    dynamodb = boto3.client('dynamodb')
-    try:
-        all_movies = []
-        response = dynamodb.scan(TableName="serverless-movies-api-db")
-        all_movies.extend(change_format(response.get('Items', [])))
-        
-        while 'LastEvaluatedKey' in response:
-            response = dynamodb.scan(
-                TableName="serverless-movies-api-db",
-                ExclusiveStartKey=response['LastEvaluatedKey']
-            )
+def generate_summary():
+    bedrock = boto3.client('bedrock-runtime')
 
-            all_movies.extend(change_format(response.get('Items', [])))
-        
-        return all_movies
-    except Exception as e:
-        print(f"Error fetching items: {e}")
-        return []
-    
-def change_format(items):
-    return [
-        {
-            "title": item["title"]["S"],
-            "releaseYear": item["releaseYear"]["S"],
-            "genre": item["genre"]["S"],
-            "coverUrl": item["coverUrl"]["S"]
-        }
-        for item in items
-    ]
+    prompt = f'Generate a concise summary for the movie inception.'
 
-print(get_movies())
+    response = bedrock.invoke_model(
+        modelId="amazon.nova-micro-v1:0",
+        contentType="application/json",
+        accept= "application/json",
+        body= json.dumps({
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "text": prompt
+                        }
+                    ]
+                }
+            ]
+        })
+    )
+
+    return json.loads(response['body'].read().decode('utf-8'))['output']['message']['content'][0]['text']
+
+print(generate_summary())

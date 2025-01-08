@@ -50,13 +50,26 @@ def generate_summary(event, context):
     prompt = f'Generate a concise summary for the movie {event.get("title")}.'
 
     response = bedrock.invoke_model(
-        modelId="ai21.j2-mid-v1",  # Replace with the model ID
-        body=json.dumps({
-            "prompt": prompt
+        modelId="amazon.nova-micro-v1:0",
+        contentType="application/json",
+        accept= "application/json",
+        body= json.dumps({
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "text": prompt
+                        }
+                    ]
+                }
+            ]
         })
     )
 
-    return response['Body'].read().decode('utf-8')
+    response_body = json.loads(response['body'].read().decode('utf-8'))['output']['message']['content'][0]['text']
+    return response_body;
+
     
 def change_format(items):
     return [
