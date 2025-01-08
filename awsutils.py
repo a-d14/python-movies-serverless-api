@@ -183,32 +183,29 @@ class AwsUtils:
         except Exception as e:
             abort(400, str(e))
 
-    def create_role(self, role_name, policy_document):
+    def create_policy(self, policy_name, policy_document):
         iam = boto3.client('iam')
         try:
             policy_response = iam.create_policy(
-                PolicyName='DynamoReadAccess',
+                PolicyName=policy_name,
                 PolicyDocument=json.dumps(policy_document)
             )
+            return policy_response['Policy']['Arn']
+        except Exception as e:
+            abort(400, str(e))
 
+    def create_role(self, arn, role_name, assume_role_policy):
+        iam = boto3.client('iam')
+        try:
+            
             role_response = iam.create_role(
                 RoleName=role_name,
-                AssumeRolePolicyDocument=json.dumps({
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Effect": "Allow",
-                            "Principal": {"Service": "lambda.amazonaws.com"},
-                            "Action": "sts:AssumeRole"
-                        }
-                    ]
-                    }
-                )
+                AssumeRolePolicyDocument=json.dumps(assume_role_policy)
             )
 
             iam.attach_role_policy(
-                RoleName=role_response['Role']['RoleName'],
-                PolicyArn=policy_response['Policy']['Arn']
+                RoleName=role_name,
+                PolicyArn=arn
             )
 
             return role_response['Role']['Arn']
@@ -259,6 +256,19 @@ class AwsUtils:
                 Payload=json.dumps({
                     "db_name" : self.db_name if hasattr(self, 'db_name') and self.db_name else 'serverless-movies-api-db',
                     "year": year
+                })
+            )
+            return response['Payload']
+        except Exception as e:
+            abort(400, str(e))
+    
+    def generate_movie_summary(self, title):
+        lf = boto3.client('lambda')
+        try:
+            response = lf.invoke(
+                FunctionName='generate_summary',
+                Payload=json.dumps({
+                    "title": title
                 })
             )
             return response['Payload']

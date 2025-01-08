@@ -1,4 +1,5 @@
 import boto3
+import json
 
 def get_movies(event, context):
     dynamodb = boto3.client('dynamodb')
@@ -42,6 +43,20 @@ def get_movies_by_year(event, context):
     except Exception as e:
         print(f"Error fetching items: {e}")
         return []
+    
+def generate_summary(event, context):
+    bedrock = boto3.client('bedrock-runtime')
+
+    prompt = f'Generate a concise summary for the movie {event.get("title")}.'
+
+    response = bedrock.invoke_model(
+        modelId="ai21.j2-mid-v1",  # Replace with the model ID
+        body=json.dumps({
+            "prompt": prompt
+        })
+    )
+
+    return response['Body'].read().decode('utf-8')
     
 def change_format(items):
     return [

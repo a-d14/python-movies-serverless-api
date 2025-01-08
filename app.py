@@ -114,26 +114,27 @@ def insert_items_db():
         ), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+@app.route('/create-policy', methods=['POST'])
+def create_policy():
+    data = request.json
+    try:
+        response = awsutils.create_policy(data['policy-name'], data['policy-document'])
+
+        return jsonify(
+            {
+                "arn": f"{response}"
+            }
+        ), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400    
     
 @app.route('/create-role', methods=['POST'])
 def create_role():
     data = request.json
-    policy_document = {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Effect": "Allow",
-                "Action": [
-                    "dynamodb:Scan",
-                    "dynamodb:GetItem"
-                ],
-                "Resource": f"{data['arn']}"
-            }
-        ]
-    }
 
     try:
-        response = awsutils.create_role(data['role-name'], policy_document)
+        response = awsutils.create_role(data['arn'], data['role-name'], data['assume-role-policy'])
 
         return jsonify(
                 {
@@ -178,6 +179,19 @@ def get_movies_by_year(year):
         return jsonify(
             {
                 "data": json.loads(response.read().decode('utf-8'))  # Parse JSON string into a Python list/dict
+            }
+        ), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 404
+
+@app.route('/getmoviesummary/<title>', methods=['GET'])
+def generate_movie_summary(title):
+    try:
+        response = awsutils.generate_movie_summary(title)
+
+        return jsonify(
+            {
+                "summary": json.loads(response.read().decode('utf-8'))  # Parse JSON string into a Python list/dict
             }
         ), 200
     except Exception as e:
